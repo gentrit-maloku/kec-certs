@@ -1,0 +1,55 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{AD7F23F5-7964-42A3-AA86-3730D948C862}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KecCerts.Domain", "src\KecCerts.Domain\KecCerts.Domain.csproj", "{A6FDE28A-1A27-491F-885E-55639DBBB96B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KecCerts.Application", "src\KecCerts.Application\KecCerts.Application.csproj", "{D574D010-DD46-4E1F-902C-0D1D385E8EBF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KecCerts.Infrastructure", "src\KecCerts.Infrastructure\KecCerts.Infrastructure.csproj", "{71D5CE4C-A38B-4E9E-A5F0-68AE91C578A7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KecCerts.Persistence", "src\KecCerts.Persistence\KecCerts.Persistence.csproj", "{0DAFEDF6-4B8E-4EA1-9747-5B527E2F90F9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KecCerts.Api", "src\KecCerts.Api\KecCerts.Api.csproj", "{5DF15B7F-5CD5-4670-A360-88EF9FA20C5B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A6FDE28A-1A27-491F-885E-55639DBBB96B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A6FDE28A-1A27-491F-885E-55639DBBB96B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A6FDE28A-1A27-491F-885E-55639DBBB96B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A6FDE28A-1A27-491F-885E-55639DBBB96B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D574D010-DD46-4E1F-902C-0D1D385E8EBF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D574D010-DD46-4E1F-902C-0D1D385E8EBF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D574D010-DD46-4E1F-902C-0D1D385E8EBF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D574D010-DD46-4E1F-902C-0D1D385E8EBF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{71D5CE4C-A38B-4E9E-A5F0-68AE91C578A7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{71D5CE4C-A38B-4E9E-A5F0-68AE91C578A7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{71D5CE4C-A38B-4E9E-A5F0-68AE91C578A7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{71D5CE4C-A38B-4E9E-A5F0-68AE91C578A7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0DAFEDF6-4B8E-4EA1-9747-5B527E2F90F9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0DAFEDF6-4B8E-4EA1-9747-5B527E2F90F9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0DAFEDF6-4B8E-4EA1-9747-5B527E2F90F9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0DAFEDF6-4B8E-4EA1-9747-5B527E2F90F9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5DF15B7F-5CD5-4670-A360-88EF9FA20C5B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5DF15B7F-5CD5-4670-A360-88EF9FA20C5B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5DF15B7F-5CD5-4670-A360-88EF9FA20C5B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5DF15B7F-5CD5-4670-A360-88EF9FA20C5B}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{A6FDE28A-1A27-491F-885E-55639DBBB96B} = {AD7F23F5-7964-42A3-AA86-3730D948C862}
+		{D574D010-DD46-4E1F-902C-0D1D385E8EBF} = {AD7F23F5-7964-42A3-AA86-3730D948C862}
+		{71D5CE4C-A38B-4E9E-A5F0-68AE91C578A7} = {AD7F23F5-7964-42A3-AA86-3730D948C862}
+		{0DAFEDF6-4B8E-4EA1-9747-5B527E2F90F9} = {AD7F23F5-7964-42A3-AA86-3730D948C862}
+		{5DF15B7F-5CD5-4670-A360-88EF9FA20C5B} = {AD7F23F5-7964-42A3-AA86-3730D948C862}
+	EndGlobalSection
+EndGlobal
