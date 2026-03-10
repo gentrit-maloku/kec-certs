@@ -35,8 +35,11 @@ public static class DependencyInjection
                     ValidateIssuerSigningKey = true,
                     ValidIssuer = configuration["Jwt:Issuer"],
                     ValidAudience = configuration["Jwt:Audience"],
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+                    RoleClaimType = "role",
+                    NameClaimType = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"
                 };
+                options.MapInboundClaims = false;
             });
 
         // Authorization policies
