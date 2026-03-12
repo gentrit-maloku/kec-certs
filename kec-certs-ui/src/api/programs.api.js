@@ -1,0 +1,13 @@
+import api from './axios'
+
+export const getPrograms = (params) =>
+  api.get('/programs', { params })
+
+export const createProgram = (data) =>
+  api.post('/programs', data)
+
+export const updateProgram = (id, data) =>
+  api.put(`/programs/${id}`, data)
+
+export const activateProgramTemplate = (programId, templateId) =>
+  api.post(`/programs/${programId}/templates/${templateId}/activate`)
