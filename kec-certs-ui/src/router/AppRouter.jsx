@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import MainLayout from '../components/layout/MainLayout'
 import LoginPage from '../pages/auth/LoginPage'
+import RegisterPage from '../pages/auth/RegisterPage'
 import DashboardPage from '../pages/dashboard/DashboardPage'
 import CertificatesPage from '../pages/certificates/CertificatesPage'
 import CertificateDetailPage from '../pages/certificates/CertificateDetailPage'
@@ -29,6 +30,7 @@ export default function AppRouter() {
       <Routes>
         {/* Public */}
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
 
         {/* Protected — all share the sidebar layout */}
         <Route element={<PrivateRoute><MainLayout /></PrivateRoute>}>
