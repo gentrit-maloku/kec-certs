@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { importCertificates } from '../../api/certificates.api'
-import { toast } from 'sonner'
+import { notify as toast } from '../../lib/notify'
 
 const UploadIcon = () => (
   <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">

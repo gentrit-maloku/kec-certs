@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { getUsers, createUser, updateUser, deleteUser } from '../../api/users.api'
 import { useAuth } from '../../context/AuthContext'
-import { toast } from 'sonner'
+import { notify as toast } from '../../lib/notify'
 
 const ROLES = ['Viewer', 'User', 'Admin', 'SuperAdmin']
 const ROLE_TO_INT = { Viewer: 0, User: 1, Admin: 2, SuperAdmin: 3 }

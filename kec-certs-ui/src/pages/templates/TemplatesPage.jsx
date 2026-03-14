@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { getTemplates, createTemplate, activateTemplate, deleteTemplate } from '../../api/templates.api'
-import { toast } from 'sonner'
+import { notify as toast } from '../../lib/notify'
 import { getPrograms } from '../../api/programs.api'
 
 const XIcon = () => (
@@ -50,6 +50,9 @@ export default function TemplatesPage() {
   const [activateProgramId, setActivateProgramId] = useState('')
   const [activating, setActivating] = useState(false)
 
+  const [deleteModal, setDeleteModal] = useState(null)
+  const [deleting, setDeleting] = useState(false)
+
   const load = () => {
     setLoading(true)
     getTemplates({ pageNumber, pageSize })
@@ -85,13 +88,15 @@ export default function TemplatesPage() {
     finally { setActivating(false) }
   }
 
-  const handleDelete = async (t) => {
-    if (!confirm(`Jeni të sigurt që dëshironi të fshini shabllonin "${t.name}"?`)) return
+  const handleDelete = async () => {
+    setDeleting(true)
     try {
-      await deleteTemplate(t.id)
+      await deleteTemplate(deleteModal.id)
+      setDeleteModal(null)
       load()
       toast.success('Shablloni u fshi me sukses!')
     } catch { toast.error('Fshirja dështoi.') }
+    finally { setDeleting(false) }
   }
 
   const set = (key, val) => setForm(f => ({ ...f, [key]: val }))
@@ -168,7 +173,7 @@ export default function TemplatesPage() {
                         className="w-8 h-8 rounded-lg bg-slate-50 text-slate-400 hover:bg-blue-50 hover:text-[#00a0e3] transition-all flex items-center justify-center" title="Aktivizo">
                         <EditIcon />
                       </button>
-                      <button onClick={() => handleDelete(t)}
+                      <button onClick={() => setDeleteModal(t)}
                         className="w-8 h-8 rounded-lg bg-slate-50 text-slate-400 hover:bg-red-50 hover:text-red-500 transition-all flex items-center justify-center" title="Fshi">
                         <TrashIcon />
                       </button>
@@ -290,6 +295,29 @@ export default function TemplatesPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Modal */}
+      {deleteModal && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4" onClick={() => setDeleteModal(null)}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-lg font-black text-slate-800">Fshi Shabllonin</h2>
+              <button onClick={() => setDeleteModal(null)} className="w-8 h-8 rounded-lg bg-slate-50 text-slate-400 hover:bg-slate-100 flex items-center justify-center"><XIcon /></button>
+            </div>
+            <p className="text-sm text-slate-600 mb-6">
+              Jeni të sigurt që dëshironi të fshini shabllonin <strong>{deleteModal.name}</strong>? Ky veprim nuk mund të kthehet.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button onClick={() => setDeleteModal(null)}
+                className="px-5 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50">Anulo</button>
+              <button onClick={handleDelete} disabled={deleting}
+                className="px-5 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-xl text-sm font-bold disabled:opacity-70">
+                {deleting ? 'Duke fshirë...' : 'Fshi'}
+              </button>
+            </div>
           </div>
         </div>
       )}

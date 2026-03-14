@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { getCertificate, downloadCertificate, updateCertificate, generatePdf } from '../../api/certificates.api'
-import { toast } from 'sonner'
+import { notify as toast } from '../../lib/notify'
 import { useAuth } from '../../context/AuthContext'
 
 const BackIcon = () => (

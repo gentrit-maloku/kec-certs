@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { getPrograms, createProgram, updateProgram, deleteProgram, importPrograms } from '../../api/programs.api'
-import { toast } from 'sonner'
+import { notify as toast } from '../../lib/notify'
 
 const EMPTY_FORM = {
   code: '', name: '', description: '', numberOfHours: '',
@@ -57,6 +57,9 @@ export default function ProgramsPage() {
   const [form, setForm] = useState(EMPTY_FORM)
   const [formError, setFormError] = useState('')
   const [saving, setSaving] = useState(false)
+
+  const [deleteModal, setDeleteModal] = useState(null)
+  const [deleting, setDeleting] = useState(false)
 
   const [showImport, setShowImport] = useState(false)
   const [importFile, setImportFile] = useState(null)
@@ -123,13 +126,15 @@ export default function ProgramsPage() {
     }
   }
 
-  const handleDelete = async (p) => {
-    if (!confirm(`Jeni të sigurt që dëshironi të fshini programin "${p.name}" (${p.code})?`)) return
+  const handleDelete = async () => {
+    setDeleting(true)
     try {
-      await deleteProgram(p.id)
+      await deleteProgram(deleteModal.id)
+      setDeleteModal(null)
       load()
       toast.success('Programi u fshi me sukses!')
     } catch { toast.error('Fshirja dështoi.') }
+    finally { setDeleting(false) }
   }
 
   const toggleActive = async (p) => {
@@ -140,7 +145,7 @@ export default function ProgramsPage() {
         status: p.status, accreditationFrom: p.accreditationFrom, accreditationTo: p.accreditationTo
       })
       load()
-    } catch { alert('Ndryshimi i statusit dështoi.') }
+    } catch { toast.error('Ndryshimi i statusit dështoi.') }
   }
 
   const handleImport = async (e) => {
@@ -281,7 +286,7 @@ export default function ProgramsPage() {
                           className="w-8 h-8 rounded-lg bg-slate-50 text-slate-400 hover:bg-blue-50 hover:text-[#00a0e3] transition-all flex items-center justify-center" title="Ndrysho">
                           <EditIcon />
                         </button>
-                        <button onClick={() => handleDelete(p)}
+                        <button onClick={() => setDeleteModal(p)}
                           className="w-8 h-8 rounded-lg bg-slate-50 text-slate-400 hover:bg-red-50 hover:text-red-500 transition-all flex items-center justify-center" title="Fshi">
                           <TrashIcon />
                         </button>
@@ -307,6 +312,29 @@ export default function ProgramsPage() {
           </div>
         )}
       </div>
+
+      {/* Delete Modal */}
+      {deleteModal && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4" onClick={() => setDeleteModal(null)}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-lg font-black text-slate-800">Fshi Programin</h2>
+              <button onClick={() => setDeleteModal(null)} className="w-8 h-8 rounded-lg bg-slate-50 text-slate-400 hover:bg-slate-100 flex items-center justify-center"><XIcon /></button>
+            </div>
+            <p className="text-sm text-slate-600 mb-6">
+              Jeni të sigurt që dëshironi të fshini programin <strong>{deleteModal.name}</strong> ({deleteModal.code})? Ky veprim nuk mund të kthehet.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button onClick={() => setDeleteModal(null)}
+                className="px-5 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50">Anulo</button>
+              <button onClick={handleDelete} disabled={deleting}
+                className="px-5 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-xl text-sm font-bold disabled:opacity-70">
+                {deleting ? 'Duke fshirë...' : 'Fshi'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal */}
       {modal && (
