@@ -14,3 +14,11 @@ export const activateProgramTemplate = (programId, templateId) =>
 
 export const deleteProgram = (id) =>
   api.delete(`/programs/${id}`)
+
+export const importPrograms = (file) => {
+  const form = new FormData()
+  form.append('file', file)
+  return api.post('/programs/import', form, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  })
+}

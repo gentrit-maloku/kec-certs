@@ -114,11 +114,8 @@ export default function GenerateCertificatePage() {
                 <div className="w-16 h-16 bg-slate-100 text-slate-300 rounded-full flex items-center justify-center mb-6 group-hover:bg-white group-hover:text-[#00a0e3] transition-all">
                   <UploadIcon />
                 </div>
-                <h4 className="text-lg font-bold text-slate-800 mb-2">Zgjidhni skedarin Excel</h4>
-                <p className="text-sm text-slate-400 max-w-xs mb-8">
-                  Tërhiqni skedarin këtu ose klikoni për të kërkuar në kompjuter
-                </p>
-                <label className="px-6 py-2 bg-slate-800 text-white rounded-xl text-sm font-bold cursor-pointer hover:bg-slate-700 transition-all">
+                <h4 className="text-lg font-bold text-slate-800 mb-6">Zgjidhni skedarin Excel</h4>
+                <label className="px-6 py-2 bg-[#00a0e3] hover:bg-[#008cc7] text-white rounded-xl text-sm font-bold cursor-pointer transition-all">
                   Zgjidh Skedarin
                   <input
                     type="file"
@@ -138,7 +135,7 @@ export default function GenerateCertificatePage() {
           <button
             type="submit"
             disabled={loading || !file}
-            className="w-full bg-[#00a0e3] hover:bg-[#008cc7] text-white py-4 rounded-2xl font-bold shadow-lg shadow-blue-100 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+            className="w-full bg-[#1e293b] hover:bg-[#263548] text-white py-4 rounded-2xl font-bold transition-all disabled:cursor-not-allowed"
           >
             {loading ? 'Duke importuar...' : 'Importo & Gjenero Certifikata'}
           </button>

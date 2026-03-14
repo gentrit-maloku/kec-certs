@@ -27,7 +27,7 @@ public static class DependencyInjection
         // Identity stores - lives here because it needs the concrete DbContext
         services.AddIdentityCore<ApplicationUser>(options =>
             {
-                options.Password.RequireDigit = true;
+                options.Password.RequireDigit = false;
                 options.Password.RequireLowercase = true;
                 options.Password.RequireUppercase = true;
                 options.Password.RequireNonAlphanumeric = false;

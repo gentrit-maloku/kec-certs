@@ -139,6 +139,98 @@ public class ExcelParserService : IExcelParser
         return Task.FromResult(result);
     }
 
+    public Task<ProgramParseResult> ParseProgramDataAsync(Stream fileStream, CancellationToken cancellationToken = default)
+    {
+        var result = new ProgramParseResult();
+
+        using var workbook = new XLWorkbook(fileStream);
+        var worksheet = workbook.Worksheets.FirstOrDefault();
+
+        if (worksheet is null)
+        {
+            result.Errors.Add(new ImportError(0, "File", "Excel file contains no worksheets."));
+            return Task.FromResult(result);
+        }
+
+        var rows = worksheet.RangeUsed()?.RowsUsed().Skip(1).ToList();
+        if (rows is null || rows.Count == 0)
+        {
+            result.Errors.Add(new ImportError(0, "File", "Excel file contains no data rows."));
+            return Task.FromResult(result);
+        }
+
+        for (int i = 0; i < rows.Count; i++)
+        {
+            var row = rows[i];
+            var rowNumber = i + 2;
+
+            // Skip completely empty rows
+            var allEmpty = Enumerable.Range(1, 5).All(col => string.IsNullOrWhiteSpace(GetCellString(row, col)));
+            if (allEmpty) continue;
+
+            var code = GetCellString(row, 1);       // A - Kodi
+            var name = GetCellString(row, 2);       // B - Emërtimi
+            var hoursStr = GetCellString(row, 3);   // C - Numri i orëve
+            var regDateStr = GetCellString(row, 4); // D - Data e regjistrimit
+            var status = GetCellString(row, 5);     // E - Statusi
+            var accFromStr = GetCellString(row, 6); // F - Akreditimi prej
+            var accToStr = GetCellString(row, 7);   // G - Akreditimi deri
+
+            var hasError = false;
+
+            if (string.IsNullOrEmpty(code))
+            {
+                result.Errors.Add(new ImportError(rowNumber, "Kodi (A)", "Kodi është i detyrueshëm."));
+                hasError = true;
+            }
+
+            if (string.IsNullOrEmpty(name))
+            {
+                result.Errors.Add(new ImportError(rowNumber, "Emërtimi (B)", "Emërtimi është i detyrueshëm."));
+                hasError = true;
+            }
+
+            if (hasError) continue;
+
+            int? numberOfHours = null;
+            if (!string.IsNullOrEmpty(hoursStr) && int.TryParse(hoursStr, out var h))
+                numberOfHours = h;
+
+            DateOnly? registrationDate = null;
+            if (!string.IsNullOrEmpty(regDateStr))
+            {
+                if (TryParseDate(regDateStr, row.Cell(4), out var rd))
+                    registrationDate = rd;
+            }
+
+            DateOnly? accFrom = null;
+            if (!string.IsNullOrEmpty(accFromStr))
+            {
+                if (TryParseDate(accFromStr, row.Cell(6), out var af))
+                    accFrom = af;
+            }
+
+            DateOnly? accTo = null;
+            if (!string.IsNullOrEmpty(accToStr))
+            {
+                if (TryParseDate(accToStr, row.Cell(7), out var at))
+                    accTo = at;
+            }
+
+            result.Rows.Add(new ProgramRow(
+                rowNumber,
+                code!,
+                name!,
+                numberOfHours,
+                registrationDate,
+                NullIfEmpty(status),
+                accFrom,
+                accTo));
+        }
+
+        return Task.FromResult(result);
+    }
+
     private static string GetCellString(IXLRangeRow row, int column)
     {
         var cell = row.Cell(column);

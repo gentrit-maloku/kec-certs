@@ -31,10 +31,17 @@ public class UsersController(IIdentityService identityService) : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateUserRequest request, CancellationToken cancellationToken)
     {
-        var id = await identityService.CreateUserAsync(
-            request.Email, request.FirstName, request.LastName,
-            request.Password, request.Role, cancellationToken);
-        return CreatedAtAction(nameof(GetById), new { id }, new { id });
+        try
+        {
+            var id = await identityService.CreateUserAsync(
+                request.Email, request.FirstName, request.LastName,
+                request.Password, request.Role, cancellationToken);
+            return CreatedAtAction(nameof(GetById), new { id }, new { id });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
     }
 
     [HttpPut("{id:guid}")]

@@ -182,15 +182,6 @@ export default function DashboardPage() {
             </button>
           </div>
 
-          {/* System status */}
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
-            <h3 className="text-base font-bold text-slate-800 mb-4">Statusi i Sistemit</h3>
-            <div className="space-y-3">
-              <StatusRow label="Baza e të dhënave" status="Online" color="text-green-500" />
-              <StatusRow label="Shërbimi PDF" status="Aktiv" color="text-green-500" />
-              <StatusRow label="Backup-i i fundit" status={new Date().toLocaleDateString('sq-AL') + ', 04:00 AM'} color="text-slate-500" />
-            </div>
-          </div>
         </div>
       </div>
     </div>
@@ -207,15 +198,6 @@ function StatCard({ icon, iconColor, iconBg, value, label }) {
         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{label}</p>
         <p className="text-2xl font-black text-slate-800">{value}</p>
       </div>
-    </div>
-  )
-}
-
-function StatusRow({ label, status, color }) {
-  return (
-    <div className="flex items-center justify-between">
-      <span className="text-sm text-slate-600">{label}</span>
-      <span className={`text-sm font-semibold ${color}`}>{status}</span>
     </div>
   )
 }

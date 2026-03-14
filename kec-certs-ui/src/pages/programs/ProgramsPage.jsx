@@ -1,11 +1,17 @@
 import { useEffect, useState } from 'react'
-import { getPrograms, createProgram, updateProgram, deleteProgram } from '../../api/programs.api'
+import { getPrograms, createProgram, updateProgram, deleteProgram, importPrograms } from '../../api/programs.api'
 import { toast } from 'sonner'
 
 const EMPTY_FORM = {
   code: '', name: '', description: '', numberOfHours: '',
   registrationDate: '', status: '', accreditationFrom: '', accreditationTo: ''
 }
+
+const UploadIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+  </svg>
+)
 
 const TrashIcon = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -51,6 +57,10 @@ export default function ProgramsPage() {
   const [form, setForm] = useState(EMPTY_FORM)
   const [formError, setFormError] = useState('')
   const [saving, setSaving] = useState(false)
+
+  const [showImport, setShowImport] = useState(false)
+  const [importFile, setImportFile] = useState(null)
+  const [importing, setImporting] = useState(false)
 
   const load = () => {
     setLoading(true)
@@ -133,19 +143,81 @@ export default function ProgramsPage() {
     } catch { alert('Ndryshimi i statusit dështoi.') }
   }
 
+  const handleImport = async (e) => {
+    e.preventDefault()
+    if (!importFile) return
+    setImporting(true)
+    try {
+      const { data } = await importPrograms(importFile)
+      setShowImport(false)
+      setImportFile(null)
+      load()
+      const { created, updated, errors } = data
+      if (errors?.length > 0) {
+        toast.error(errors[0])
+      } else {
+        toast.success(`Importimi u krye! ${created} të reja, ${updated} të përditësuara.`)
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Importimi dështoi.')
+    } finally {
+      setImporting(false)
+    }
+  }
+
   const totalPages = Math.ceil(totalCount / pageSize)
 
   return (
     <div className="space-y-4">
+      {showImport && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4" onClick={() => setShowImport(false)}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-lg font-black text-slate-800">Importo Programe nga Excel</h2>
+              <button onClick={() => setShowImport(false)} className="w-8 h-8 rounded-lg bg-slate-50 text-slate-400 hover:bg-slate-100 flex items-center justify-center"><XIcon /></button>
+            </div>
+            <form onSubmit={handleImport} className="space-y-4">
+              {importFile ? (
+                <div className="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                  <span className="text-sm font-medium text-slate-700">{importFile.name}</span>
+                  <button type="button" onClick={() => setImportFile(null)} className="text-red-400 hover:text-red-600 text-xs ml-auto">Largo</button>
+                </div>
+              ) : (
+                <label className="flex items-center justify-center p-8 border-2 border-dashed border-slate-200 rounded-xl cursor-pointer hover:border-[#00a0e3] hover:bg-blue-50/20 transition-all">
+                  <span className="text-sm text-slate-400">Klikoni për të zgjedhur skedarin Excel</span>
+                  <input type="file" className="hidden" accept=".xlsx,.xls" onChange={e => setImportFile(e.target.files[0])} />
+                </label>
+              )}
+              <div className="flex gap-3 pt-2">
+                <button type="submit" disabled={importing || !importFile}
+                  className="px-6 py-3 bg-[#1e293b] hover:bg-[#263548] text-white rounded-xl font-bold text-sm transition-all disabled:opacity-60">
+                  {importing ? 'Duke importuar...' : 'Importo'}
+                </button>
+                <button type="button" onClick={() => setShowImport(false)}
+                  className="px-6 py-3 bg-white border border-slate-200 text-slate-600 rounded-xl font-bold text-sm hover:bg-slate-50">
+                  Anulo
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-2xl font-black text-slate-800">Programet e Trajnimit</h1>
           <p className="text-sm text-slate-400 mt-1">Menaxhoni listën e programeve të trajnimit</p>
         </div>
-        <button onClick={openCreate}
-          className="flex items-center gap-2 px-5 py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-bold text-sm transition-all shadow-sm">
-          + Shto Program
-        </button>
+        <div className="flex items-center gap-3">
+          <button onClick={() => setShowImport(true)}
+            className="flex items-center gap-2 px-5 py-3 bg-[#1e293b]/10 border border-[#1e293b]/20 hover:bg-[#1e293b]/20 text-[#1e293b] rounded-xl font-bold text-sm transition-all">
+            <UploadIcon /> Importo Excel
+          </button>
+          <button onClick={openCreate}
+            className="flex items-center gap-2 px-5 py-3 bg-[#1e293b] hover:bg-[#263548] text-white rounded-xl font-bold text-sm transition-all shadow-sm">
+            + Shto Program
+          </button>
+        </div>
       </div>
 
       <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
@@ -306,7 +378,7 @@ export default function ProgramsPage() {
                 <button type="button" onClick={() => setModal(null)}
                   className="px-5 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50">Anulo</button>
                 <button type="submit" disabled={saving}
-                  className="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-sm font-bold disabled:opacity-70">
+                  className="px-5 py-2.5 bg-[#1e293b] hover:bg-[#263548] text-white rounded-xl text-sm font-bold disabled:opacity-70">
                   {saving ? 'Duke ruajtur...' : 'Ruaj'}
                 </button>
               </div>

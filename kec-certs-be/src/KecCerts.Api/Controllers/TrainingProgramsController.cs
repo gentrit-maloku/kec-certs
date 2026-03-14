@@ -1,6 +1,7 @@
 using KecCerts.Application.Common.Interfaces;
 using KecCerts.Application.Common.Models;
 using KecCerts.Application.Programs.Commands.CreateProgram;
+using KecCerts.Application.Programs.Commands.ImportPrograms;
 using KecCerts.Application.Programs.Commands.UpdateProgram;
 using KecCerts.Application.Programs.Queries.GetPrograms;
 using KecCerts.Application.Templates.Commands.ActivateTemplate;
@@ -58,6 +59,22 @@ public sealed class TrainingProgramsController(ISender sender, IApplicationDbCon
                 request.AccreditationFrom, request.AccreditationTo),
             cancellationToken);
         return NoContent();
+    }
+
+    [HttpPost("import")]
+    [Authorize(Policy = "AdminOrAbove")]
+    [RequestSizeLimit(10 * 1024 * 1024)]
+    public async Task<IActionResult> Import(
+        IFormFile file,
+        CancellationToken cancellationToken)
+    {
+        if (file is null || file.Length == 0)
+            return BadRequest(new { error = "Skedari është i detyrueshëm." });
+
+        await using var stream = file.OpenReadStream();
+        var result = await sender.Send(new ImportProgramsCommand(stream), cancellationToken);
+
+        return Ok(result);
     }
 
     [HttpDelete("{id:guid}")]

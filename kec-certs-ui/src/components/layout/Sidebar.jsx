@@ -82,10 +82,8 @@ export default function Sidebar() {
     <aside className="w-56 min-h-screen bg-[#1e293b] flex flex-col shrink-0">
 
       {/* Logo */}
-      <div className="px-4 py-5 border-b border-white/5">
-        <div className="bg-white rounded-xl px-3 py-2 flex items-center justify-center">
-          <img src={kecLogo} alt="KEC" className="h-14 w-auto" />
-        </div>
+      <div className="px-5 py-5 border-b border-white/5 flex items-center justify-center">
+        <img src={kecLogo} alt="KEC" className="h-12 w-auto brightness-0 invert" />
       </div>
 
       {/* Nav */}
@@ -110,10 +108,16 @@ export default function Sidebar() {
       </nav>
 
       {/* Bottom: user + logout */}
-      <div className="px-3 py-4 border-t border-white/5">
-        <div className="px-3 mb-3">
-          <p className="text-sm font-semibold text-slate-200 truncate">{user?.name}</p>
-          <p className="text-xs text-slate-500 mt-0.5">{user?.role}</p>
+      <div className="px-3 py-4 border-t border-white/5 space-y-2">
+        <div className="flex items-center gap-3 px-2">
+          <div className="w-9 h-9 rounded-full bg-[#00a0e3] flex items-center justify-center shrink-0">
+            <span className="text-xs font-bold text-white uppercase">
+              {user?.name?.split(' ').map(n => n[0]).slice(0, 2).join('') || '?'}
+            </span>
+          </div>
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-slate-200 truncate">{user?.name}</p>
+          </div>
         </div>
         <button
           onClick={handleLogout}

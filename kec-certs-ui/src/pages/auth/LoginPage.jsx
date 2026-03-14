@@ -33,7 +33,7 @@ export default function LoginPage() {
     setError('')
     setLoading(true)
     try {
-      await login(email, password)
+      await login(email, password, rememberMe)
       navigate('/dashboard')
     } catch (err) {
       setError(err.response?.data?.error || 'Invalid email or password.')
@@ -56,13 +56,13 @@ export default function LoginPage() {
         {/* Logo */}
         <div className="flex flex-col items-center mb-10">
           <img src={kecLogo} alt="KEC Logo" className="h-44 w-auto mb-6" />
-          <h2 className="text-base font-semibold text-slate-500">Please sign-in to your account</h2>
+          <h2 className="text-base font-semibold text-slate-500">Kyçuni në llogarinë tuaj</h2>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
           {/* Email */}
           <div>
-            <label className="block text-sm font-semibold text-slate-500 mb-2">Email</label>
+            <label className="block text-sm font-semibold text-slate-500 mb-2">Email-i</label>
             <input
               type="email"
               required
@@ -75,7 +75,7 @@ export default function LoginPage() {
 
           {/* Password */}
           <div>
-            <label className="block text-sm font-semibold text-slate-500 mb-2">Password</label>
+            <label className="block text-sm font-semibold text-slate-500 mb-2">Fjalëkalimi</label>
             <div className="relative">
               <input
                 type={showPassword ? 'text' : 'password'}
@@ -95,24 +95,11 @@ export default function LoginPage() {
             </div>
           </div>
 
-          {/* Remember me + Forgot password */}
-          <div className="flex items-center justify-between text-sm">
-            <label className="flex items-center gap-2 cursor-pointer group">
-              <input
-                type="checkbox"
-                checked={rememberMe}
-                onChange={(e) => setRememberMe(e.target.checked)}
-                className="w-4 h-4 rounded border-slate-300 accent-[#00a0e3]"
-              />
-              <span className="text-slate-500 font-medium group-hover:text-slate-700">Remember me</span>
-            </label>
-            <a href="#" className="text-[#00a0e3] font-bold hover:underline">Forgot password?</a>
-          </div>
 
           {/* Error */}
           {error && (
             <p className="text-red-600 text-sm bg-red-50 px-4 py-3 rounded-xl">
-              {error}
+              Email-i ose fjalëkalimi është i pasaktë.
             </p>
           )}
 
@@ -122,15 +109,15 @@ export default function LoginPage() {
             disabled={loading}
             className="w-full bg-[#00a0e3] hover:bg-[#008cc7] text-white py-4 rounded-xl font-bold text-base shadow-[0_4px_15px_rgba(0,160,227,0.3)] transition-all active:scale-[0.98] disabled:opacity-80 disabled:cursor-not-allowed mt-2"
           >
-            {loading ? 'Signing in...' : 'Login'}
+            {loading ? 'Duke u kyçur...' : 'Kyçu'}
           </button>
         </form>
 
         {/* Register link */}
         <p className="text-center text-sm text-slate-500 mt-6">
-          Don't have an account?{' '}
+          Nuk keni llogari?{' '}
           <Link to="/register" className="text-[#00a0e3] font-bold hover:underline">
-            Register here
+            Regjistrohu këtu
           </Link>
         </p>
       </div>

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import DatePicker from '../../components/ui/DatePicker'
 import { getCertificates } from '../../api/certificates.api'
 import { getPrograms } from '../../api/programs.api'
 import { exportCertificates, printCertificates } from '../../api/reports.api'
@@ -218,15 +219,11 @@ export default function CertificatesPage() {
               {/* Date range */}
               <div>
                 <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Data Nga</label>
-                <input type="date"
-                  className="p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-[#00a0e3]"
-                  value={filters.from} onChange={(e) => setFilter('from', e.target.value)} />
+                <DatePicker value={filters.from} onChange={(v) => setFilter('from', v)} />
               </div>
               <div>
                 <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Data Deri</label>
-                <input type="date"
-                  className="p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-[#00a0e3]"
-                  value={filters.to} onChange={(e) => setFilter('to', e.target.value)} />
+                <DatePicker value={filters.to} onChange={(v) => setFilter('to', v)} />
               </div>
 
               <button

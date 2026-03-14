@@ -126,7 +126,7 @@ export default function DocumentsPage() {
         {isAtLeast('User') && (
           <button
             onClick={() => setShowUpload(!showUpload)}
-            className="flex items-center gap-2 px-5 py-3 bg-[#00a0e3] hover:bg-[#008cc7] text-white rounded-xl font-semibold text-sm transition-all shadow-lg shadow-blue-100"
+            className="flex items-center gap-2 px-5 py-3 bg-[#1e293b] hover:bg-[#263548] text-white rounded-xl font-semibold text-sm transition-all shadow-sm"
           >
             <UploadIcon /> Ngarko Dokument
           </button>
@@ -137,7 +137,12 @@ export default function DocumentsPage() {
       {showUpload && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70" onClick={() => setShowUpload(false)}>
           <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-lg mx-4" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-lg font-bold text-slate-800 mb-6">Ngarko Dokument të Ri</h3>
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-bold text-slate-800">Ngarko Dokument të Ri</h3>
+              <button type="button" onClick={() => setShowUpload(false)} className="w-8 h-8 rounded-lg bg-slate-50 text-slate-400 hover:bg-slate-100 flex items-center justify-center">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
             <form onSubmit={handleUpload} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -194,7 +199,7 @@ export default function DocumentsPage() {
                 <button
                   type="submit"
                   disabled={uploading}
-                  className="px-6 py-3 bg-[#00a0e3] hover:bg-[#008cc7] text-white rounded-xl font-bold text-sm transition-all disabled:opacity-60"
+                  className="px-6 py-3 bg-[#1e293b] hover:bg-[#263548] text-white rounded-xl font-bold text-sm transition-all disabled:opacity-60"
                 >
                   {uploading ? 'Duke ngarkuar...' : 'Ngarko'}
                 </button>

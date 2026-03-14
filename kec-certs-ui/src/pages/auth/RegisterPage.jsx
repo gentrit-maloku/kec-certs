@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { register } from '../../api/auth.api'
 import kecLogo from '../../assets/KEC_logo_stacked.svg'
+import { toast } from 'sonner'
 
 const EyeIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -35,21 +36,22 @@ export default function RegisterPage() {
     setError('')
 
     if (password !== confirmPassword) {
-      setError('Passwords do not match.')
+      setError('Fjalëkalimet nuk përputhen.')
       return
     }
 
     if (password.length < 8) {
-      setError('Password must be at least 8 characters.')
+      setError('Fjalëkalimi duhet të ketë së paku 8 karaktere.')
       return
     }
 
     setLoading(true)
     try {
       await register({ email, password, firstName, lastName })
-      navigate('/login', { state: { registered: true } })
+      toast.success('Regjistrimi u krye me sukses! Kyçuni tani.')
+      navigate('/login')
     } catch (err) {
-      setError(err.response?.data?.error || 'Registration failed. Please try again.')
+      setError(err.response?.data?.error || 'Regjistrimi dështoi. Ju lutemi provoni sërish.')
     } finally {
       setLoading(false)
     }
@@ -69,29 +71,29 @@ export default function RegisterPage() {
         {/* Logo */}
         <div className="flex flex-col items-center mb-10">
           <img src={kecLogo} alt="KEC Logo" className="h-44 w-auto mb-6" />
-          <h2 className="text-base font-semibold text-slate-500">Create your account</h2>
+          <h2 className="text-base font-semibold text-slate-500">Krijoni llogarinë tuaj</h2>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
           {/* First Name & Last Name */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-semibold text-slate-500 mb-2">First Name</label>
+              <label className="block text-sm font-semibold text-slate-500 mb-2">Emri</label>
               <input
                 type="text"
                 required
-                placeholder="First name"
+                placeholder="Emri"
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
                 className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-[#00a0e3] focus:ring-4 focus:ring-blue-50 outline-none transition-all text-sm"
               />
             </div>
             <div>
-              <label className="block text-sm font-semibold text-slate-500 mb-2">Last Name</label>
+              <label className="block text-sm font-semibold text-slate-500 mb-2">Mbiemri</label>
               <input
                 type="text"
                 required
-                placeholder="Last name"
+                placeholder="Mbiemri"
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
                 className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-[#00a0e3] focus:ring-4 focus:ring-blue-50 outline-none transition-all text-sm"
@@ -101,7 +103,7 @@ export default function RegisterPage() {
 
           {/* Email */}
           <div>
-            <label className="block text-sm font-semibold text-slate-500 mb-2">Email</label>
+            <label className="block text-sm font-semibold text-slate-500 mb-2">Email-i</label>
             <input
               type="email"
               required
@@ -114,7 +116,7 @@ export default function RegisterPage() {
 
           {/* Password */}
           <div>
-            <label className="block text-sm font-semibold text-slate-500 mb-2">Password</label>
+            <label className="block text-sm font-semibold text-slate-500 mb-2">Fjalëkalimi</label>
             <div className="relative">
               <input
                 type={showPassword ? 'text' : 'password'}
@@ -132,11 +134,14 @@ export default function RegisterPage() {
                 {showPassword ? <EyeOffIcon /> : <EyeIcon />}
               </button>
             </div>
+            <p className="text-xs text-slate-400 mt-1.5">
+              Min 8 karaktere · 1 shkronjë e madhe (A-Z) · 1 e vogël (a-z)
+            </p>
           </div>
 
           {/* Confirm Password */}
           <div>
-            <label className="block text-sm font-semibold text-slate-500 mb-2">Confirm Password</label>
+            <label className="block text-sm font-semibold text-slate-500 mb-2">Konfirmo Fjalëkalimin</label>
             <div className="relative">
               <input
                 type={showConfirmPassword ? 'text' : 'password'}
@@ -169,15 +174,15 @@ export default function RegisterPage() {
             disabled={loading}
             className="w-full bg-[#00a0e3] hover:bg-[#008cc7] text-white py-4 rounded-xl font-bold text-base shadow-[0_4px_15px_rgba(0,160,227,0.3)] transition-all active:scale-[0.98] disabled:opacity-80 disabled:cursor-not-allowed mt-2"
           >
-            {loading ? 'Registering...' : 'Register'}
+            {loading ? 'Duke u regjistruar...' : 'Regjistrohu'}
           </button>
         </form>
 
         {/* Login link */}
         <p className="text-center text-sm text-slate-500 mt-6">
-          Already have an account?{' '}
+          Keni llogari?{' '}
           <Link to="/login" className="text-[#00a0e3] font-bold hover:underline">
-            Login here
+            Kyçuni këtu
           </Link>
         </p>
       </div>
