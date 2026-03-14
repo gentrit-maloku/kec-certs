@@ -6,4 +6,9 @@ public record UpdateProgramCommand(
     Guid Id,
     string Name,
     string? Description,
-    bool IsActive) : IRequest;
+    bool IsActive,
+    int? NumberOfHours,
+    DateOnly? RegistrationDate,
+    string? Status,
+    DateOnly? AccreditationFrom,
+    DateOnly? AccreditationTo) : IRequest;

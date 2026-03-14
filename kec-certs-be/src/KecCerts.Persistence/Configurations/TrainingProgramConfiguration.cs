@@ -25,6 +25,11 @@ public class TrainingProgramConfiguration : IEntityTypeConfiguration<TrainingPro
         builder.Property(p => p.Description)
             .HasMaxLength(1000);
 
+        builder.Property(p => p.Status).HasMaxLength(50);
+
+        builder.Ignore(p => p.IsAccreditationExpired);
+        builder.Ignore(p => p.IsAccreditationExpiringSoon);
+
         builder.HasOne(p => p.ActiveTemplate)
             .WithMany()
             .HasForeignKey(p => p.ActiveTemplateId)
@@ -38,7 +43,7 @@ public class TrainingProgramConfiguration : IEntityTypeConfiguration<TrainingPro
         builder.HasMany(p => p.Certificates)
             .WithOne(c => c.TrainingProgram)
             .HasForeignKey(c => c.TrainingProgramId)
-            .OnDelete(DeleteBehavior.Restrict);
+            .OnDelete(DeleteBehavior.SetNull);
 
         builder.HasMany(p => p.Decisions)
             .WithOne(d => d.TrainingProgram)

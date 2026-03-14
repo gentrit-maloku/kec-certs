@@ -7,11 +7,33 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace KecCerts.Persistence.Migrations
 {
     /// <inheritdoc />
-    public partial class InitDb : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.CreateTable(
+                name: "documents",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Name = table.Column<string>(type: "character varying(300)", maxLength: 300, nullable: false),
+                    FileKey = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
+                    FileName = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
+                    ContentType = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    FileSize = table.Column<long>(type: "bigint", nullable: false),
+                    Category = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    Description = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
+                    CreatedByUserId = table.Column<Guid>(type: "uuid", nullable: false),
+                    UpdatedByUserId = table.Column<Guid>(type: "uuid", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_documents", x => x.Id);
+                });
+
             migrationBuilder.CreateTable(
                 name: "roles",
                 columns: table => new
@@ -175,7 +197,7 @@ namespace KecCerts.Persistence.Migrations
                     Status = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
                     ZipFileKey = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
                     ErrorDetails = table.Column<string>(type: "text", nullable: true),
-                    TrainingProgramId = table.Column<Guid>(type: "uuid", nullable: false),
+                    TrainingProgramId = table.Column<Guid>(type: "uuid", nullable: true),
                     CreatedByUserId = table.Column<Guid>(type: "uuid", nullable: false),
                     UpdatedByUserId = table.Column<Guid>(type: "uuid", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
@@ -194,6 +216,17 @@ namespace KecCerts.Persistence.Migrations
                     Name = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
                     TemplateFileKey = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
                     Description = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
+                    CertificationType = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: true),
+                    Logo1FileKey = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
+                    Logo2FileKey = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
+                    Logo3FileKey = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
+                    Signature1FileKey = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
+                    Signature1Name = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: true),
+                    Signature2FileKey = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
+                    Signature2Name = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: true),
+                    Signature3FileKey = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
+                    Signature3Name = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: true),
+                    Location = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false, defaultValue: "Prishtinë"),
                     PlaceholdersJson = table.Column<string>(type: "jsonb", nullable: false, defaultValue: "[]"),
                     TrainingProgramId = table.Column<Guid>(type: "uuid", nullable: true),
                     IsActive = table.Column<bool>(type: "boolean", nullable: false),
@@ -214,6 +247,11 @@ namespace KecCerts.Persistence.Migrations
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     Code = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
                     Name = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    NumberOfHours = table.Column<int>(type: "integer", nullable: true),
+                    RegistrationDate = table.Column<DateOnly>(type: "date", nullable: true),
+                    Status = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
+                    AccreditationFrom = table.Column<DateOnly>(type: "date", nullable: true),
+                    AccreditationTo = table.Column<DateOnly>(type: "date", nullable: true),
                     Description = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
                     IsActive = table.Column<bool>(type: "boolean", nullable: false),
                     ActiveTemplateId = table.Column<Guid>(type: "uuid", nullable: true),
@@ -239,16 +277,25 @@ namespace KecCerts.Persistence.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     SerialNumber = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    ParticipantFirstName = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    ParticipantLastName = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    ParticipantPersonalNumber = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
                     IssueDate = table.Column<DateOnly>(type: "date", nullable: false),
-                    Grade = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
-                    FileKey = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
+                    TrainingCode = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    TrainingName = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
+                    ParticipantFullName = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    PersonalNumber = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
+                    TrainingGroup = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: true),
+                    Gender = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: true),
+                    Position = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: true),
+                    Subject = table.Column<string>(type: "character varying(300)", maxLength: 300, nullable: true),
+                    InstitutionName = table.Column<string>(type: "character varying(300)", maxLength: 300, nullable: true),
+                    InstitutionLocation = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: true),
+                    Municipality = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
+                    InstitutionType = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
+                    TrainingDates = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: true),
+                    FileKey = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
                     GenerationMethod = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
                     BatchId = table.Column<Guid>(type: "uuid", nullable: true),
-                    TrainingProgramId = table.Column<Guid>(type: "uuid", nullable: false),
-                    TemplateId = table.Column<Guid>(type: "uuid", nullable: false),
+                    TrainingProgramId = table.Column<Guid>(type: "uuid", nullable: true),
+                    TemplateId = table.Column<Guid>(type: "uuid", nullable: true),
                     CreatedByUserId = table.Column<Guid>(type: "uuid", nullable: false),
                     UpdatedByUserId = table.Column<Guid>(type: "uuid", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
@@ -268,13 +315,13 @@ namespace KecCerts.Persistence.Migrations
                         column: x => x.TemplateId,
                         principalTable: "certificate_templates",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.SetNull);
                     table.ForeignKey(
                         name: "FK_certificates_training_programs_TrainingProgramId",
                         column: x => x.TrainingProgramId,
                         principalTable: "training_programs",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.SetNull);
                 });
 
             migrationBuilder.CreateTable(
@@ -323,9 +370,9 @@ namespace KecCerts.Persistence.Migrations
                 column: "IssueDate");
 
             migrationBuilder.CreateIndex(
-                name: "IX_certificates_ParticipantLastName",
+                name: "IX_certificates_ParticipantFullName",
                 table: "certificates",
-                column: "ParticipantLastName");
+                column: "ParticipantFullName");
 
             migrationBuilder.CreateIndex(
                 name: "IX_certificates_SerialNumber",
@@ -347,6 +394,11 @@ namespace KecCerts.Persistence.Migrations
                 name: "IX_decisions_TrainingProgramId",
                 table: "decisions",
                 column: "TrainingProgramId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_documents_Category",
+                table: "documents",
+                column: "Category");
 
             migrationBuilder.CreateIndex(
                 name: "IX_role_claims_RoleId",
@@ -401,8 +453,7 @@ namespace KecCerts.Persistence.Migrations
                 table: "bulk_generation_batches",
                 column: "TrainingProgramId",
                 principalTable: "training_programs",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
+                principalColumn: "Id");
 
             migrationBuilder.AddForeignKey(
                 name: "FK_certificate_templates_training_programs_TrainingProgramId",
@@ -425,6 +476,9 @@ namespace KecCerts.Persistence.Migrations
 
             migrationBuilder.DropTable(
                 name: "decisions");
+
+            migrationBuilder.DropTable(
+                name: "documents");
 
             migrationBuilder.DropTable(
                 name: "role_claims");

@@ -17,10 +17,11 @@ public class GetCertificatesQueryHandler(IApplicationDbContext context)
         {
             var term = request.SearchTerm.ToLower();
             query = query.Where(c =>
-                c.ParticipantFirstName.ToLower().Contains(term) ||
-                c.ParticipantLastName.ToLower().Contains(term) ||
+                c.ParticipantFullName.ToLower().Contains(term) ||
                 c.SerialNumber.ToLower().Contains(term) ||
-                (c.ParticipantPersonalNumber != null && c.ParticipantPersonalNumber.ToLower().Contains(term)));
+                c.TrainingCode.ToLower().Contains(term) ||
+                c.TrainingName.ToLower().Contains(term) ||
+                (c.PersonalNumber != null && c.PersonalNumber.ToLower().Contains(term)));
         }
 
         if (request.TrainingProgramId.HasValue)
@@ -32,19 +33,43 @@ public class GetCertificatesQueryHandler(IApplicationDbContext context)
         if (request.ToDate.HasValue)
             query = query.Where(c => c.IssueDate <= request.ToDate.Value);
 
+        // Serial number range filter
+        if (request.FromSerial.HasValue)
+        {
+            var fromStr = request.FromSerial.Value.ToString();
+            query = query.Where(c =>
+                c.SerialNumber.Length > fromStr.Length ||
+                (c.SerialNumber.Length == fromStr.Length && c.SerialNumber.CompareTo(fromStr) >= 0));
+        }
+        if (request.ToSerial.HasValue)
+        {
+            var toStr = request.ToSerial.Value.ToString();
+            query = query.Where(c =>
+                c.SerialNumber.Length < toStr.Length ||
+                (c.SerialNumber.Length == toStr.Length && c.SerialNumber.CompareTo(toStr) <= 0));
+        }
+
+        // Sort by serial number descending (newest first)
         var projected = query
-            .OrderByDescending(c => c.CreatedAt)
+            .OrderByDescending(c => c.SerialNumber.Length)
+            .ThenByDescending(c => c.SerialNumber)
             .Select(c => new CertificateListDto(
                 c.Id,
                 c.SerialNumber,
-                c.ParticipantFirstName,
-                c.ParticipantLastName,
-                c.ParticipantPersonalNumber,
                 c.IssueDate,
-                c.Grade,
-                c.TrainingProgram.Name,
-                c.TrainingProgram.Code,
-                c.GenerationMethod.ToString(),
+                c.TrainingCode,
+                c.TrainingName,
+                c.ParticipantFullName,
+                c.PersonalNumber,
+                c.TrainingGroup,
+                c.Gender,
+                c.Position,
+                c.Subject,
+                c.InstitutionName,
+                c.InstitutionLocation,
+                c.Municipality,
+                c.InstitutionType,
+                c.TrainingDates,
                 c.CreatedAt));
 
         return await PaginatedList<CertificateListDto>.CreateAsync(

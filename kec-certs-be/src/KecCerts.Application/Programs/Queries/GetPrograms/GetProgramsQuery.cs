@@ -14,8 +14,12 @@ public record ProgramDto(
     string Code,
     string Name,
     string? Description,
+    int? NumberOfHours,
+    DateOnly? RegistrationDate,
+    string? Status,
+    DateOnly? AccreditationFrom,
+    DateOnly? AccreditationTo,
     bool IsActive,
     Guid? ActiveTemplateId,
     string? ActiveTemplateName,
-    int CertificateCount,
     DateTime CreatedAt);

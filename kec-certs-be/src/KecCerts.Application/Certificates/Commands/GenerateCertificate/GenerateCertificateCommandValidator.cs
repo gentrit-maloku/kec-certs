@@ -7,9 +7,9 @@ public class GenerateCertificateCommandValidator : AbstractValidator<GenerateCer
     public GenerateCertificateCommandValidator()
     {
         RuleFor(x => x.SerialNumber).NotEmpty().MaximumLength(100);
-        RuleFor(x => x.FirstName).NotEmpty().MaximumLength(100);
-        RuleFor(x => x.LastName).NotEmpty().MaximumLength(100);
-        RuleFor(x => x.PersonalNumber).MaximumLength(50);
+        RuleFor(x => x.ParticipantFullName).NotEmpty().MaximumLength(200);
+        RuleFor(x => x.TrainingCode).NotEmpty().MaximumLength(100);
+        RuleFor(x => x.TrainingName).NotEmpty().MaximumLength(500);
         RuleFor(x => x.IssueDate).NotEmpty();
         RuleFor(x => x.TrainingProgramId).NotEmpty();
     }

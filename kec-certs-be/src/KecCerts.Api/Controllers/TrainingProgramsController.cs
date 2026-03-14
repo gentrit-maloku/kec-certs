@@ -1,3 +1,4 @@
+using KecCerts.Application.Common.Interfaces;
 using KecCerts.Application.Common.Models;
 using KecCerts.Application.Programs.Commands.CreateProgram;
 using KecCerts.Application.Programs.Commands.UpdateProgram;
@@ -6,13 +7,14 @@ using KecCerts.Application.Templates.Commands.ActivateTemplate;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace KecCerts.Api.Controllers;
 
 [ApiController]
 [Route("api/programs")]
 [Authorize]
-public sealed class TrainingProgramsController(ISender sender) : ControllerBase
+public sealed class TrainingProgramsController(ISender sender, IApplicationDbContext dbContext) : ControllerBase
 {
     [HttpGet]
     [ProducesResponseType<PaginatedList<ProgramDto>>(StatusCodes.Status200OK)]
@@ -51,8 +53,23 @@ public sealed class TrainingProgramsController(ISender sender) : ControllerBase
         CancellationToken cancellationToken)
     {
         await sender.Send(
-            new UpdateProgramCommand(id, request.Name, request.Description, request.IsActive),
+            new UpdateProgramCommand(id, request.Name, request.Description, request.IsActive,
+                request.NumberOfHours, request.RegistrationDate, request.Status,
+                request.AccreditationFrom, request.AccreditationTo),
             cancellationToken);
+        return NoContent();
+    }
+
+    [HttpDelete("{id:guid}")]
+    [Authorize(Policy = "AdminOrAbove")]
+    public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
+    {
+        var program = await dbContext.TrainingPrograms
+            .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
+        if (program is null) return NotFound();
+
+        dbContext.TrainingPrograms.Remove(program);
+        await dbContext.SaveChangesAsync(cancellationToken);
         return NoContent();
     }
 
@@ -70,4 +87,12 @@ public sealed class TrainingProgramsController(ISender sender) : ControllerBase
     }
 }
 
-public record UpdateProgramRequest(string Name, string? Description, bool IsActive);
+public record UpdateProgramRequest(
+    string Name,
+    string? Description,
+    bool IsActive,
+    int? NumberOfHours,
+    DateOnly? RegistrationDate,
+    string? Status,
+    DateOnly? AccreditationFrom,
+    DateOnly? AccreditationTo);

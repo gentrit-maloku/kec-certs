@@ -20,6 +20,11 @@ public class UpdateProgramCommandHandler(
         program.Name = request.Name;
         program.Description = request.Description;
         program.IsActive = request.IsActive;
+        program.NumberOfHours = request.NumberOfHours;
+        program.RegistrationDate = request.RegistrationDate;
+        program.Status = request.Status;
+        program.AccreditationFrom = request.AccreditationFrom;
+        program.AccreditationTo = request.AccreditationTo;
         program.UpdatedAt = DateTime.UtcNow;
         program.UpdatedByUserId = currentUser.UserId;
 

@@ -10,10 +10,18 @@ public record DashboardStatisticsDto(
     int TotalBatches,
     int CertificatesThisMonth,
     int CertificatesThisYear,
-    List<ProgramCertificateCountDto> CertificatesByProgram);
+    List<ProgramCertificateCountDto> CertificatesByProgram,
+    List<AccreditationAlertDto> AccreditationAlerts);
 
 public record ProgramCertificateCountDto(
     Guid ProgramId,
     string ProgramName,
     string ProgramCode,
     int CertificateCount);
+
+public record AccreditationAlertDto(
+    Guid ProgramId,
+    string ProgramCode,
+    string ProgramName,
+    DateOnly? AccreditationTo,
+    string AlertType); // "expired" or "expiring_soon"

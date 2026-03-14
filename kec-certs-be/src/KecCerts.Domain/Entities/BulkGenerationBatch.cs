@@ -13,8 +13,8 @@ public class BulkGenerationBatch : BaseEntity, IAuditableEntity
     public string? ZipFileKey { get; set; }
     public string? ErrorDetails { get; set; }
 
-    public Guid TrainingProgramId { get; set; }
-    public TrainingProgram TrainingProgram { get; set; } = null!;
+    public Guid? TrainingProgramId { get; set; }
+    public TrainingProgram? TrainingProgram { get; set; }
 
     public Guid CreatedByUserId { get; set; }
     public Guid? UpdatedByUserId { get; set; }

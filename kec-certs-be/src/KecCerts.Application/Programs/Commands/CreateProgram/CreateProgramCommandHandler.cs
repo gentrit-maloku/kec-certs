@@ -25,6 +25,11 @@ public class CreateProgramCommandHandler(
             Code = request.Code,
             Name = request.Name,
             Description = request.Description,
+            NumberOfHours = request.NumberOfHours,
+            RegistrationDate = request.RegistrationDate,
+            Status = request.Status,
+            AccreditationFrom = request.AccreditationFrom,
+            AccreditationTo = request.AccreditationTo,
             CreatedByUserId = currentUser.UserId
         };
 

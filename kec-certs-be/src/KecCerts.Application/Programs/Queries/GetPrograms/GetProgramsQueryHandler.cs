@@ -31,10 +31,14 @@ public class GetProgramsQueryHandler(IApplicationDbContext context)
                 p.Code,
                 p.Name,
                 p.Description,
+                p.NumberOfHours,
+                p.RegistrationDate,
+                p.Status,
+                p.AccreditationFrom,
+                p.AccreditationTo,
                 p.IsActive,
                 p.ActiveTemplateId,
                 p.ActiveTemplate != null ? p.ActiveTemplate.Name : null,
-                p.Certificates.Count,
                 p.CreatedAt));
 
         return await PaginatedList<ProgramDto>.CreateAsync(
