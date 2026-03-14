@@ -7,10 +7,11 @@ import DashboardPage from '../pages/dashboard/DashboardPage'
 import CertificatesPage from '../pages/certificates/CertificatesPage'
 import CertificateDetailPage from '../pages/certificates/CertificateDetailPage'
 import GenerateCertificatePage from '../pages/certificates/GenerateCertificatePage'
-import BulkGeneratePage from '../pages/certificates/BulkGeneratePage'
+// BulkGeneratePage removed - merged into GenerateCertificatePage
 import ProgramsPage from '../pages/programs/ProgramsPage'
 import TemplatesPage from '../pages/templates/TemplatesPage'
 import UsersPage from '../pages/users/UsersPage'
+import DocumentsPage from '../pages/documents/DocumentsPage'
 
 const Dashboard = DashboardPage
 
@@ -42,8 +43,10 @@ export default function AppRouter() {
             <RoleRoute minRole="User"><GenerateCertificatePage /></RoleRoute>
           } />
           <Route path="/certificates/bulk" element={
-            <RoleRoute minRole="User"><BulkGeneratePage /></RoleRoute>
+            <Navigate to="/certificates/generate" replace />
           } />
+
+          <Route path="/documents" element={<DocumentsPage />} />
 
           <Route path="/programs" element={
             <RoleRoute minRole="Admin"><ProgramsPage /></RoleRoute>

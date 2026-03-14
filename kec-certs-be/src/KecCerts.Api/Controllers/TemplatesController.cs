@@ -1,16 +1,18 @@
+using KecCerts.Application.Common.Interfaces;
 using KecCerts.Application.Templates.Commands.ActivateTemplate;
 using KecCerts.Application.Templates.Commands.CreateTemplate;
 using KecCerts.Application.Templates.Queries.GetTemplates;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace KecCerts.Api.Controllers;
 
 [ApiController]
 [Route("api/templates")]
-[Authorize(Policy = "SuperAdmin")]
-public class TemplatesController(ISender mediator) : ControllerBase
+[Authorize(Policy = "AdminOrAbove")]
+public class TemplatesController(ISender mediator, IApplicationDbContext dbContext) : ControllerBase
 {
     [HttpGet]
     [Authorize(Policy = "ViewerOrAbove")]
@@ -26,18 +28,36 @@ public class TemplatesController(ISender mediator) : ControllerBase
     }
 
     [HttpPost]
-    [RequestSizeLimit(10 * 1024 * 1024)]
+    [RequestSizeLimit(20 * 1024 * 1024)]
     public async Task<IActionResult> Upload(
-        [FromForm] IFormFile file,
+        [FromForm] IFormFile? file,
         [FromForm] string name,
         [FromForm] string? description,
+        [FromForm] string? certificationType,
+        [FromForm] string? location,
         [FromForm] Guid? trainingProgramId,
         [FromForm] List<string> placeholders,
+        [FromForm] IFormFile? logo1,
+        [FromForm] IFormFile? logo2,
+        [FromForm] IFormFile? logo3,
+        [FromForm] IFormFile? signature1,
+        [FromForm] string? signature1Name,
+        [FromForm] IFormFile? signature2,
+        [FromForm] string? signature2Name,
+        [FromForm] IFormFile? signature3,
+        [FromForm] string? signature3Name,
         CancellationToken cancellationToken)
     {
-        await using var stream = file.OpenReadStream();
+        var stream = file?.OpenReadStream();
         var command = new CreateTemplateCommand(
-            name, description, stream, file.FileName, trainingProgramId, placeholders);
+            name, description, certificationType, location ?? "Prishtinë",
+            stream, file?.FileName, trainingProgramId, placeholders ?? [],
+            logo1?.OpenReadStream(), logo1?.FileName,
+            logo2?.OpenReadStream(), logo2?.FileName,
+            logo3?.OpenReadStream(), logo3?.FileName,
+            signature1?.OpenReadStream(), signature1?.FileName, signature1Name,
+            signature2?.OpenReadStream(), signature2?.FileName, signature2Name,
+            signature3?.OpenReadStream(), signature3?.FileName, signature3Name);
 
         var id = await mediator.Send(command, cancellationToken);
         return CreatedAtAction(nameof(GetAll), new { id }, new { id });
@@ -49,6 +69,18 @@ public class TemplatesController(ISender mediator) : ControllerBase
     {
         var command = new ActivateTemplateCommand(templateId, programId);
         await mediator.Send(command, cancellationToken);
+        return NoContent();
+    }
+
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
+    {
+        var template = await dbContext.CertificateTemplates
+            .FirstOrDefaultAsync(t => t.Id == id, cancellationToken);
+        if (template is null) return NotFound();
+
+        dbContext.CertificateTemplates.Remove(template);
+        await dbContext.SaveChangesAsync(cancellationToken);
         return NoContent();
     }
 }

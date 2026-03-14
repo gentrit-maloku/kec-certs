@@ -15,84 +15,145 @@ public class ExcelParserService : IExcelParser
 
         if (worksheet is null)
         {
-            result.Errors.Add("Excel file contains no worksheets.");
+            result.Errors.Add(new ImportError(0, "File", "Excel file contains no worksheets."));
             return Task.FromResult(result);
         }
 
         var rows = worksheet.RangeUsed()?.RowsUsed().Skip(1).ToList(); // Skip header row
         if (rows is null || rows.Count == 0)
         {
-            result.Errors.Add("Excel file contains no data rows.");
+            result.Errors.Add(new ImportError(0, "File", "Excel file contains no data rows."));
             return Task.FromResult(result);
         }
-
-        var seenSerials = new HashSet<string>();
 
         for (int i = 0; i < rows.Count; i++)
         {
             var row = rows[i];
             var rowNumber = i + 2; // 1-based, +1 for header
 
-            var programCode = row.Cell(1).GetString().Trim();
-            var programName = row.Cell(2).GetString().Trim();
-            var firstName = row.Cell(3).GetString().Trim();
-            var lastName = row.Cell(4).GetString().Trim();
-            var personalNumber = row.Cell(5).GetString().Trim();
-            var serialNumber = row.Cell(6).GetString().Trim();
-            var issueDateStr = row.Cell(7).GetString().Trim();
-            var grade = row.Cell(8).GetString().Trim();
+            // Skip completely empty rows
+            var allEmpty = Enumerable.Range(1, 5).All(col => string.IsNullOrWhiteSpace(GetCellString(row, col)));
+            if (allEmpty) continue;
 
-            // Validate required fields
-            if (string.IsNullOrEmpty(firstName))
+            // Column A - Numri rendor (REQUIRED)
+            var numriRendor = GetCellString(row, 1);
+            // Column B - Data e lëshimit te certifikatës (REQUIRED)
+            var issueDateStr = GetCellString(row, 2);
+            // Column C - Kodi i trajnimit (REQUIRED)
+            var trainingCode = GetCellString(row, 3);
+            // Column D - Emri i trajnimit (REQUIRED)
+            var trainingName = GetCellString(row, 4);
+            // Column E - Emri dhe mbiemri (REQUIRED)
+            var fullName = GetCellString(row, 5);
+            // Column F - Numri personal
+            var personalNumber = GetCellString(row, 6);
+            // Column G - Grupi i trajnimit
+            var trainingGroup = GetCellString(row, 7);
+            // Column H - Gjinia
+            var gender = GetCellString(row, 8);
+            // Column I - Pozita
+            var position = GetCellString(row, 9);
+            // Column J - Lënda
+            var subject = GetCellString(row, 10);
+            // Column K - Emri i institucionit
+            var institutionName = GetCellString(row, 11);
+            // Column L - Vendi i institucionit
+            var institutionLocation = GetCellString(row, 12);
+            // Column M - Komuna
+            var municipality = GetCellString(row, 13);
+            // Column N - Tipi i institucionit
+            var institutionType = GetCellString(row, 14);
+            // Column O - Datat e mbajtjes se trajnimit
+            var trainingDates = GetCellString(row, 15);
+
+            // Validate required fields (A-E)
+            var hasError = false;
+
+            if (string.IsNullOrEmpty(numriRendor))
             {
-                result.Errors.Add($"Row {rowNumber}: First name is required.");
-                continue;
-            }
-            if (string.IsNullOrEmpty(lastName))
-            {
-                result.Errors.Add($"Row {rowNumber}: Last name is required.");
-                continue;
-            }
-            if (string.IsNullOrEmpty(serialNumber))
-            {
-                result.Errors.Add($"Row {rowNumber}: Serial number is required.");
-                continue;
+                result.Errors.Add(new ImportError(rowNumber, "Numri rendor (A)", "Serial number is required."));
+                hasError = true;
             }
 
-            // Check for duplicate serial numbers within the file
-            if (!seenSerials.Add(serialNumber))
+            if (string.IsNullOrEmpty(issueDateStr))
             {
-                result.Errors.Add($"Row {rowNumber}: Duplicate serial number '{serialNumber}' within file.");
-                continue;
+                result.Errors.Add(new ImportError(rowNumber, "Data e lëshimit (B)", "Issue date is required."));
+                hasError = true;
+            }
+
+            if (string.IsNullOrEmpty(trainingCode))
+            {
+                result.Errors.Add(new ImportError(rowNumber, "Kodi i trajnimit (C)", "Training code is required."));
+                hasError = true;
+            }
+
+            if (string.IsNullOrEmpty(trainingName))
+            {
+                result.Errors.Add(new ImportError(rowNumber, "Emri i trajnimit (D)", "Training name is required."));
+                hasError = true;
+            }
+
+            if (string.IsNullOrEmpty(fullName))
+            {
+                result.Errors.Add(new ImportError(rowNumber, "Emri dhe mbiemri (E)", "Full name is required."));
+                hasError = true;
             }
 
             // Parse date
-            if (!TryParseDate(issueDateStr, row.Cell(7), out var issueDate))
+            DateOnly issueDate = default;
+            if (!string.IsNullOrEmpty(issueDateStr))
             {
-                result.Errors.Add($"Row {rowNumber}: Invalid date format '{issueDateStr}'. Expected dd.MM.yyyy or dd/MM/yyyy.");
-                continue;
+                if (!TryParseDate(issueDateStr, row.Cell(2), out issueDate))
+                {
+                    result.Errors.Add(new ImportError(rowNumber, "Data e lëshimit (B)",
+                        $"Invalid date format '{issueDateStr}'. Expected DD.MM.YYYY."));
+                    hasError = true;
+                }
             }
 
-            result.Rows.Add(new ParticipantRow(
-                string.IsNullOrEmpty(programCode) ? null : programCode,
-                string.IsNullOrEmpty(programName) ? null : programName,
-                firstName,
-                lastName,
-                string.IsNullOrEmpty(personalNumber) ? null : personalNumber,
-                serialNumber,
+            if (hasError)
+                continue;
+
+            // Add optional field warnings
+            if (string.IsNullOrEmpty(personalNumber))
+                result.Warnings.Add(new ImportError(rowNumber, "Numri personal (F)", "Personal number is empty."));
+
+            result.Rows.Add(new CertificateRow(
+                rowNumber,
                 issueDate,
-                string.IsNullOrEmpty(grade) ? null : grade,
-                rowNumber));
+                trainingCode!,
+                trainingName!,
+                fullName!,
+                NullIfEmpty(personalNumber),
+                NullIfEmpty(trainingGroup),
+                NullIfEmpty(gender),
+                NullIfEmpty(position),
+                NullIfEmpty(subject),
+                NullIfEmpty(institutionName),
+                NullIfEmpty(institutionLocation),
+                NullIfEmpty(municipality),
+                NullIfEmpty(institutionType),
+                NullIfEmpty(trainingDates)));
         }
 
         return Task.FromResult(result);
     }
 
+    private static string GetCellString(IXLRangeRow row, int column)
+    {
+        var cell = row.Cell(column);
+        if (cell.DataType == XLDataType.DateTime)
+            return cell.GetDateTime().ToString("dd.MM.yyyy");
+        return cell.GetString().Trim();
+    }
+
+    private static string? NullIfEmpty(string? value)
+        => string.IsNullOrWhiteSpace(value) ? null : value;
+
     private static bool TryParseDate(string dateStr, IXLCell cell, out DateOnly result)
     {
         result = default;
 
-        // Try to get DateTime directly from cell (Excel date format)
         if (cell.DataType == XLDataType.DateTime)
         {
             var dt = cell.GetDateTime();
@@ -100,7 +161,6 @@ public class ExcelParserService : IExcelParser
             return true;
         }
 
-        // Try common Albanian/European date formats
         string[] formats = ["dd.MM.yyyy", "dd/MM/yyyy", "d.M.yyyy", "d/M/yyyy", "yyyy-MM-dd"];
         return DateOnly.TryParseExact(dateStr, formats, null, System.Globalization.DateTimeStyles.None, out result);
     }

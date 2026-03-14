@@ -11,3 +11,6 @@ export const updateProgram = (id, data) =>
 
 export const activateProgramTemplate = (programId, templateId) =>
   api.post(`/programs/${programId}/templates/${templateId}/activate`)
+
+export const deleteProgram = (id) =>
+  api.delete(`/programs/${id}`)

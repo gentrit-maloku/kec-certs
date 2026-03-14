@@ -19,6 +19,7 @@ public class ApplicationDbContext(
     public DbSet<Certificate> Certificates => Set<Certificate>();
     public DbSet<BulkGenerationBatch> BulkGenerationBatches => Set<BulkGenerationBatch>();
     public DbSet<Decision> Decisions => Set<Decision>();
+    public DbSet<Document> Documents => Set<Document>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

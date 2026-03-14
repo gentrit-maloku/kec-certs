@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getCertificates, downloadCertificate } from '../../api/certificates.api'
+import { getCertificates } from '../../api/certificates.api'
 import { getPrograms } from '../../api/programs.api'
+import { exportCertificates, printCertificates } from '../../api/reports.api'
 import { useAuth } from '../../context/AuthContext'
 
 const SearchIcon = () => (
@@ -9,41 +10,56 @@ const SearchIcon = () => (
     <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
   </svg>
 )
-const FilterIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
-  </svg>
-)
-const DownloadIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
-  </svg>
-)
 const EyeIcon = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
   </svg>
 )
-const DownloadSmIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+const ExcelIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+    <polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/>
+  </svg>
+)
+const PrintIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+    <rect x="6" y="14" width="12" height="8"/>
   </svg>
 )
 
+const columns = [
+  { key: 'serialNumber', label: 'Nr. Rendor' },
+  { key: 'issueDate', label: 'Data e Lëshimit' },
+  { key: 'trainingCode', label: 'Kodi' },
+  { key: 'trainingName', label: 'Emri i Trajnimit' },
+  { key: 'participantFullName', label: 'Emri dhe Mbiemri' },
+  { key: 'personalNumber', label: 'Nr. Personal' },
+  { key: 'trainingGroup', label: 'Grupi' },
+  { key: 'gender', label: 'Gjinia' },
+  { key: 'position', label: 'Pozita' },
+  { key: 'subject', label: 'Lënda' },
+  { key: 'institutionName', label: 'Institucioni' },
+  { key: 'institutionLocation', label: 'Vendi' },
+  { key: 'municipality', label: 'Komuna' },
+  { key: 'institutionType', label: 'Tipi' },
+  { key: 'trainingDates', label: 'Datat e Trajnimit' },
+]
+
 export default function CertificatesPage() {
-  const { isAtLeast } = useAuth()
+  useAuth()
   const navigate = useNavigate()
 
   const [certs, setCerts] = useState([])
   const [programs, setPrograms] = useState([])
   const [totalCount, setTotalCount] = useState(0)
   const [loading, setLoading] = useState(true)
-  const [showFilters, setShowFilters] = useState(false)
-  const [downloadingId, setDownloadingId] = useState(null)
+  const [exporting, setExporting] = useState(false)
 
   const [filters, setFilters] = useState({
     search: '', programId: '', from: '', to: '',
-    pageNumber: 1, pageSize: 10,
+    fromSerial: '', toSerial: '',
+    pageNumber: 1, pageSize: 20,
   })
 
   useEffect(() => {
@@ -69,24 +85,55 @@ export default function CertificatesPage() {
   const setFilter = (key, value) =>
     setFilters((prev) => ({ ...prev, [key]: value, pageNumber: 1 }))
 
-  const handleDownload = async (cert) => {
-    setDownloadingId(cert.id)
+  const getExportParams = () => {
+    const params = {}
+    if (filters.search) params.search = filters.search
+    if (filters.programId) params.programId = filters.programId
+    if (filters.from) params.fromDate = filters.from
+    if (filters.to) params.toDate = filters.to
+    if (filters.fromSerial) params.fromSerial = filters.fromSerial
+    if (filters.toSerial) params.toSerial = filters.toSerial
+    return params
+  }
+
+  const handleExportExcel = async () => {
+    setExporting(true)
     try {
-      const { data } = await downloadCertificate(cert.id)
-      const url = URL.createObjectURL(new Blob([data], { type: 'application/pdf' }))
+      const { data } = await exportCertificates({ ...getExportParams(), format: 'xlsx' })
+      const url = URL.createObjectURL(new Blob([data]))
       const a = document.createElement('a')
       a.href = url
-      a.download = `certificate-${cert.serialNumber}.pdf`
+      a.download = `certifikata_${new Date().toISOString().slice(0, 10)}.xlsx`
       a.click()
       URL.revokeObjectURL(url)
     } catch {
-      alert('Shkarkimi dështoi.')
+      alert('Eksportimi dështoi.')
     } finally {
-      setDownloadingId(null)
+      setExporting(false)
     }
   }
 
+  const handlePrintPdf = async () => {
+    setExporting(true)
+    try {
+      const { data } = await printCertificates(getExportParams())
+      const url = URL.createObjectURL(new Blob([data], { type: 'application/pdf' }))
+      window.open(url, '_blank')
+    } catch {
+      alert('Printimi dështoi.')
+    } finally {
+      setExporting(false)
+    }
+  }
+
+  const clearFilters = () => setFilters({
+    search: '', programId: '', from: '', to: '',
+    fromSerial: '', toSerial: '',
+    pageNumber: 1, pageSize: 20,
+  })
+
   const totalPages = Math.ceil(totalCount / filters.pageSize)
+  const hasActiveFilters = filters.search || filters.programId || filters.from || filters.to || filters.fromSerial || filters.toSerial
 
   return (
     <div>
@@ -99,122 +146,161 @@ export default function CertificatesPage() {
             </span>
             <input
               type="text"
-              placeholder="Kërko me Emër, Program, Numër Serial ose ID Personale..."
+              placeholder="Kërko me Emër, Kod Trajnimi, Numër Serial ose ID Personale..."
               value={filters.search}
               onChange={(e) => setFilter('search', e.target.value)}
               className="w-full pl-11 pr-4 py-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-blue-100 focus:bg-white transition-all text-sm border border-transparent focus:border-[#00a0e3]"
             />
           </div>
 
+          {/* Export Excel */}
           <button
-            onClick={() => setShowFilters(!showFilters)}
-            className={`flex items-center gap-2 px-5 py-3 border rounded-xl font-semibold text-sm transition-all
-              ${showFilters ? 'bg-blue-50 border-[#00a0e3] text-[#00a0e3]' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}
+            onClick={handleExportExcel}
+            disabled={exporting}
+            className="flex items-center gap-2 px-4 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-semibold text-sm transition-all disabled:opacity-60"
+            title="Eksporto në Excel"
           >
-            <FilterIcon /> Filtra
+            <ExcelIcon /> Excel
           </button>
 
-          {isAtLeast('User') && (
-            <button
-              onClick={() => navigate('/certificates/generate')}
-              className="flex items-center gap-2 px-5 py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-semibold text-sm transition-all"
-            >
-              <DownloadIcon /> + Gjenero
-            </button>
-          )}
+          {/* Print PDF */}
+          <button
+            onClick={handlePrintPdf}
+            disabled={exporting}
+            className="flex items-center gap-2 px-4 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl font-semibold text-sm transition-all disabled:opacity-60"
+            title="Printo certifikatat (PDF)"
+          >
+            <PrintIcon /> Print
+          </button>
+
         </div>
 
-        {/* Expandable filters */}
-        {showFilters && (
-          <div className="px-4 pb-4 flex gap-3 flex-wrap border-t border-slate-100 pt-4">
-            <select
-              className="p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-[#00a0e3] min-w-[200px]"
-              value={filters.programId}
-              onChange={(e) => setFilter('programId', e.target.value)}
-            >
-              <option value="">Të gjitha programet</option>
-              {programs.map((p) => (
-                <option key={p.id} value={p.id}>{p.name}</option>
-              ))}
-            </select>
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-slate-400 font-medium">Nga:</span>
-              <input type="date"
-                className="p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-[#00a0e3]"
-                value={filters.from} onChange={(e) => setFilter('from', e.target.value)} />
+        {/* Filters */}
+        <div className="px-4 pb-4 border-t border-slate-100 pt-4">
+            <div className="flex gap-3 flex-wrap items-end">
+              {/* Program filter */}
+              <div>
+                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Programi</label>
+                <select
+                  className="p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-[#00a0e3] min-w-[200px]"
+                  value={filters.programId}
+                  onChange={(e) => setFilter('programId', e.target.value)}
+                >
+                  <option value="">Të gjitha programet</option>
+                  {programs.map((p) => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Serial number range */}
+              <div>
+                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Nr. Serial Nga</label>
+                <input
+                  type="number"
+                  placeholder="p.sh. 35001"
+                  className="p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-[#00a0e3] w-[130px]"
+                  value={filters.fromSerial}
+                  onChange={(e) => setFilter('fromSerial', e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Nr. Serial Deri</label>
+                <input
+                  type="number"
+                  placeholder="p.sh. 36000"
+                  className="p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-[#00a0e3] w-[130px]"
+                  value={filters.toSerial}
+                  onChange={(e) => setFilter('toSerial', e.target.value)}
+                />
+              </div>
+
+              {/* Date range */}
+              <div>
+                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Data Nga</label>
+                <input type="date"
+                  className="p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-[#00a0e3]"
+                  value={filters.from} onChange={(e) => setFilter('from', e.target.value)} />
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Data Deri</label>
+                <input type="date"
+                  className="p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-[#00a0e3]"
+                  value={filters.to} onChange={(e) => setFilter('to', e.target.value)} />
+              </div>
+
+              <button
+                onClick={clearFilters}
+                className="px-4 py-2.5 text-sm text-slate-500 hover:text-slate-700 font-medium"
+              >
+                Pastro filtrat
+              </button>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-slate-400 font-medium">Deri:</span>
-              <input type="date"
-                className="p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-[#00a0e3]"
-                value={filters.to} onChange={(e) => setFilter('to', e.target.value)} />
-            </div>
-            <button
-              onClick={() => setFilters({ search: '', programId: '', from: '', to: '', pageNumber: 1, pageSize: 10 })}
-              className="px-4 py-2.5 text-sm text-slate-500 hover:text-slate-700 font-medium"
-            >
-              Pastro filtrat
-            </button>
           </div>
-        )}
       </div>
+
+      {/* Active filter info */}
+      {hasActiveFilters && (
+        <div className="bg-blue-50 border border-blue-100 rounded-xl px-4 py-2 mb-4 flex items-center justify-between">
+          <span className="text-sm text-blue-700">
+            {totalCount} certifikata të filtruara — Eksporti/Printimi do të përfshijë vetëm këto rezultate
+          </span>
+          <button onClick={clearFilters} className="text-sm text-blue-500 hover:text-blue-700 font-medium">
+            Largo filtrat
+          </button>
+        </div>
+      )}
 
       {/* Table */}
       <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-        <table className="w-full text-left">
-          <thead>
-            <tr className="border-b border-slate-100">
-              {['Serial ID', 'Pjesëmarrësi', 'Programi', 'Data', 'Statusi', 'Veprime'].map((h) => (
-                <th key={h} className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                  {h}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-50">
-            {loading ? (
-              <tr><td colSpan={6} className="px-6 py-12 text-center text-sm text-slate-400">Duke ngarkuar...</td></tr>
-            ) : certs.length === 0 ? (
-              <tr><td colSpan={6} className="px-6 py-12 text-center text-sm text-slate-400">Nuk u gjetën certifikata.</td></tr>
-            ) : certs.map((c) => (
-              <tr key={c.id} className="hover:bg-slate-50/80 transition group">
-                <td className="px-6 py-4 font-mono text-xs font-bold text-[#00a0e3]">{c.serialNumber}</td>
-                <td className="px-6 py-4">
-                  <p className="font-bold text-slate-800 text-sm">{c.participantFirstName} {c.participantLastName}</p>
-                  {c.participantPersonalNumber && (
-                    <p className="text-[10px] text-slate-400 italic font-medium">ID: {c.participantPersonalNumber}</p>
-                  )}
-                </td>
-                <td className="px-6 py-4 text-sm text-slate-600">{c.trainingProgramName}</td>
-                <td className="px-6 py-4 text-sm text-slate-500">{c.issueDate}</td>
-                <td className="px-6 py-4">
-                  <span className="px-2.5 py-1 bg-green-50 text-green-600 text-[10px] font-black rounded-full uppercase tracking-widest">
-                    Gjeneruar
-                  </span>
-                </td>
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-2">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left min-w-[1400px]">
+            <thead>
+              <tr className="border-b border-slate-100">
+                {columns.map((col) => (
+                  <th key={col.key} className="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">
+                    {col.label}
+                  </th>
+                ))}
+                <th className="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Veprime</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-50">
+              {loading ? (
+                <tr><td colSpan={columns.length + 1} className="px-6 py-12 text-center text-sm text-slate-400">Duke ngarkuar...</td></tr>
+              ) : certs.length === 0 ? (
+                <tr><td colSpan={columns.length + 1} className="px-6 py-12 text-center text-sm text-slate-400">Nuk u gjetën certifikata.</td></tr>
+              ) : certs.map((c) => (
+                <tr key={c.id} className="hover:bg-slate-50/80 transition group">
+                  <td className="px-4 py-3 font-mono text-xs font-bold text-[#00a0e3] whitespace-nowrap">{c.serialNumber}</td>
+                  <td className="px-4 py-3 text-xs text-slate-500 whitespace-nowrap">{c.issueDate}</td>
+                  <td className="px-4 py-3 text-xs font-mono text-slate-500 whitespace-nowrap">{c.trainingCode}</td>
+                  <td className="px-4 py-3 text-xs text-slate-600 max-w-[180px] truncate">{c.trainingName}</td>
+                  <td className="px-4 py-3 text-xs font-semibold text-slate-800 whitespace-nowrap">{c.participantFullName}</td>
+                  <td className="px-4 py-3 text-xs text-slate-500 whitespace-nowrap">{c.personalNumber || '—'}</td>
+                  <td className="px-4 py-3 text-xs text-slate-500 whitespace-nowrap">{c.trainingGroup || '—'}</td>
+                  <td className="px-4 py-3 text-xs text-slate-500">{c.gender || '—'}</td>
+                  <td className="px-4 py-3 text-xs text-slate-500 whitespace-nowrap">{c.position || '—'}</td>
+                  <td className="px-4 py-3 text-xs text-slate-500 max-w-[120px] truncate">{c.subject || '—'}</td>
+                  <td className="px-4 py-3 text-xs text-slate-500 max-w-[150px] truncate">{c.institutionName || '—'}</td>
+                  <td className="px-4 py-3 text-xs text-slate-500 whitespace-nowrap">{c.institutionLocation || '—'}</td>
+                  <td className="px-4 py-3 text-xs text-slate-500 whitespace-nowrap">{c.municipality || '—'}</td>
+                  <td className="px-4 py-3 text-xs text-slate-500 whitespace-nowrap">{c.institutionType || '—'}</td>
+                  <td className="px-4 py-3 text-xs text-slate-500 whitespace-nowrap">{c.trainingDates || '—'}</td>
+                  <td className="px-4 py-3">
                     <button
                       onClick={() => navigate(`/certificates/${c.id}`)}
                       className="w-8 h-8 rounded-lg bg-slate-50 text-slate-400 hover:bg-blue-50 hover:text-[#00a0e3] transition-all flex items-center justify-center"
-                      title="Shiko"
+                      title="Shiko detajet"
                     >
                       <EyeIcon />
                     </button>
-                    <button
-                      onClick={() => handleDownload(c)}
-                      disabled={downloadingId === c.id}
-                      className="w-8 h-8 rounded-lg bg-slate-50 text-slate-400 hover:bg-blue-50 hover:text-[#00a0e3] transition-all flex items-center justify-center disabled:opacity-50"
-                      title="Shkarko PDF"
-                    >
-                      <DownloadSmIcon />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
 
         {/* Pagination */}
         {totalPages > 1 && (

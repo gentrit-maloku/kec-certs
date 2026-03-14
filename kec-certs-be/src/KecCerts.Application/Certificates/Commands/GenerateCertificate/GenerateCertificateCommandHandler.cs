@@ -17,13 +17,11 @@ public class GenerateCertificateCommandHandler(
     public async Task<GenerateCertificateResult> Handle(
         GenerateCertificateCommand request, CancellationToken cancellationToken)
     {
-        // Validate serial number uniqueness
         var serialExists = await dbContext.Certificates
             .AnyAsync(c => c.SerialNumber == request.SerialNumber, cancellationToken);
         if (serialExists)
             throw new DuplicateException(nameof(Certificate), nameof(Certificate.SerialNumber), request.SerialNumber);
 
-        // Load program with active template
         var program = await dbContext.TrainingPrograms
             .Include(p => p.ActiveTemplate)
             .FirstOrDefaultAsync(p => p.Id == request.TrainingProgramId, cancellationToken)
@@ -32,34 +30,28 @@ public class GenerateCertificateCommandHandler(
         if (program.ActiveTemplate is null)
             throw new DomainException($"Training program '{program.Name}' has no active template assigned.");
 
-        // Build placeholder values
         var placeholders = new Dictionary<string, string>
         {
-            ["Emri"] = request.FirstName,
-            ["Mbiemri"] = request.LastName,
+            ["Emri"] = request.ParticipantFullName,
             ["Programi"] = program.Name,
             ["Data"] = request.IssueDate.ToString("dd.MM.yyyy"),
-            ["NumriSerial"] = request.SerialNumber,
-            ["Nota"] = request.Grade ?? string.Empty
+            ["NumriSerial"] = request.SerialNumber
         };
 
-        // Generate PDF
         var pdfBytes = await certificateGenerator.GenerateAsync(
             program.ActiveTemplate.TemplateFileKey, placeholders, cancellationToken);
 
-        // Save file
-        var fileName = $"{request.SerialNumber}_{request.LastName}_{request.FirstName}.pdf";
+        var fileName = $"{request.SerialNumber}_{request.ParticipantFullName}.pdf";
         var fileKey = await fileStorage.SaveFileAsync(
             pdfBytes, $"certificates/{program.Code}", fileName, cancellationToken);
 
-        // Create domain entity
         var certificate = Certificate.Create(
             request.SerialNumber,
-            request.FirstName,
-            request.LastName,
-            request.PersonalNumber,
             request.IssueDate,
-            request.Grade,
+            request.TrainingCode,
+            request.TrainingName,
+            request.ParticipantFullName,
+            null, null, null, null, null, null, null, null, null, null,
             program.Id,
             program.ActiveTemplate.Id,
             GenerationMethod.Manual,

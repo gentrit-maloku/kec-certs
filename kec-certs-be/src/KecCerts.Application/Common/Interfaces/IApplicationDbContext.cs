@@ -10,6 +10,7 @@ public interface IApplicationDbContext
     DbSet<Certificate> Certificates { get; }
     DbSet<BulkGenerationBatch> BulkGenerationBatches { get; }
     DbSet<Decision> Decisions { get; }
+    DbSet<Document> Documents { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

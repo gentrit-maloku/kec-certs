@@ -11,6 +11,8 @@ public class GetStatisticsQueryHandler(IApplicationDbContext context)
         GetStatisticsQuery request, CancellationToken cancellationToken)
     {
         var now = DateTime.UtcNow;
+        var today = DateOnly.FromDateTime(now);
+        var soon = DateOnly.FromDateTime(now.AddDays(30));
         var startOfMonth = new DateOnly(now.Year, now.Month, 1);
         var startOfYear = new DateOnly(now.Year, 1, 1);
 
@@ -19,21 +21,55 @@ public class GetStatisticsQueryHandler(IApplicationDbContext context)
         var totalBatches = await context.BulkGenerationBatches.CountAsync(cancellationToken);
 
         var certsThisMonth = await context.Certificates
-            .CountAsync(c => c.IssueDate >= startOfMonth, cancellationToken);
+            .Where(c => c.IssueDate >= startOfMonth)
+            .CountAsync(cancellationToken);
 
         var certsThisYear = await context.Certificates
-            .CountAsync(c => c.IssueDate >= startOfYear, cancellationToken);
+            .Where(c => c.IssueDate >= startOfYear)
+            .CountAsync(cancellationToken);
 
-        var byProgram = await context.TrainingPrograms
+        // Get certificate counts per program using groupBy on certificates
+        var certCounts = await context.Certificates
+            .Where(c => c.TrainingProgramId != null)
+            .GroupBy(c => c.TrainingProgramId)
+            .Select(g => new { ProgramId = g.Key, Count = g.Count() })
+            .ToListAsync(cancellationToken);
+
+        var programs = await context.TrainingPrograms
             .AsNoTracking()
+            .Select(p => new { p.Id, p.Name, p.Code })
+            .ToListAsync(cancellationToken);
+
+        var byProgram = programs
             .Select(p => new ProgramCertificateCountDto(
-                p.Id, p.Name, p.Code, p.Certificates.Count))
+                p.Id, p.Name, p.Code,
+                certCounts.FirstOrDefault(c => c.ProgramId == p.Id)?.Count ?? 0))
             .OrderByDescending(x => x.CertificateCount)
             .Take(10)
+            .ToList();
+
+        // Accreditation alerts
+        var programsWithAccreditation = await context.TrainingPrograms
+            .AsNoTracking()
+            .Where(p => p.AccreditationTo.HasValue && p.IsActive)
+            .Select(p => new { p.Id, p.Code, p.Name, p.AccreditationTo })
             .ToListAsync(cancellationToken);
+
+        var alerts = new List<AccreditationAlertDto>();
+        foreach (var p in programsWithAccreditation)
+        {
+            if (p.AccreditationTo!.Value < today)
+            {
+                alerts.Add(new AccreditationAlertDto(p.Id, p.Code, p.Name, p.AccreditationTo, "expired"));
+            }
+            else if (p.AccreditationTo.Value <= soon)
+            {
+                alerts.Add(new AccreditationAlertDto(p.Id, p.Code, p.Name, p.AccreditationTo, "expiring_soon"));
+            }
+        }
 
         return new DashboardStatisticsDto(
             totalCerts, totalPrograms, totalBatches,
-            certsThisMonth, certsThisYear, byProgram);
+            certsThisMonth, certsThisYear, byProgram, alerts);
     }
 }

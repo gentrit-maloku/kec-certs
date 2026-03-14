@@ -9,17 +9,25 @@ public record GetCertificatesQuery(
     string? SearchTerm = null,
     Guid? TrainingProgramId = null,
     DateOnly? FromDate = null,
-    DateOnly? ToDate = null) : IRequest<PaginatedList<CertificateListDto>>;
+    DateOnly? ToDate = null,
+    int? FromSerial = null,
+    int? ToSerial = null) : IRequest<PaginatedList<CertificateListDto>>;
 
 public record CertificateListDto(
     Guid Id,
     string SerialNumber,
-    string ParticipantFirstName,
-    string ParticipantLastName,
-    string? ParticipantPersonalNumber,
     DateOnly IssueDate,
-    string? Grade,
-    string TrainingProgramName,
-    string TrainingProgramCode,
-    string GenerationMethod,
+    string TrainingCode,
+    string TrainingName,
+    string ParticipantFullName,
+    string? PersonalNumber,
+    string? TrainingGroup,
+    string? Gender,
+    string? Position,
+    string? Subject,
+    string? InstitutionName,
+    string? InstitutionLocation,
+    string? Municipality,
+    string? InstitutionType,
+    string? TrainingDates,
     DateTime CreatedAt);
